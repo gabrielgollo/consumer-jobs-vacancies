@@ -1,7 +1,9 @@
 import { JobType, JobsServiceResponse } from "../types/utils-types";
 import { JobsModel } from "../models/jobs-model"
+import { QueueService } from "./rabbitmq-service";
 import { getLogger } from "log4js";
 
+const { AMQP_NOTIFY_QUEUE } = process.env
 const logger = getLogger()
 
 export class JobsService{
@@ -11,6 +13,7 @@ export class JobsService{
             const jobResponse = await JobsService.saveJob(job);
             if(jobResponse.status === 'success'){
                 logger.info(`[JobService] -- New Job Found -> ${jobResponse.data?.title}`)
+                await QueueService.sendToQueue(AMQP_NOTIFY_QUEUE as string, JSON.stringify(jobResponse), false);
             }
             processedJobs.push(jobResponse);
         }
@@ -32,6 +35,7 @@ export class JobsService{
                 }
 
                 await JobsModel.createOne(job);
+                
                 
                 return {
                     status: 'success',

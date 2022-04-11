@@ -5,7 +5,7 @@ import { JobType } from "../types/utils-types";
 
 const connection: mongoose.Connection = mongoDb.getOrCreateConnection();
 
-const Model = connection.model('jobVacancie', JobSchema);
+const Model = connection.model('JobVacancie', JobSchema);
 
 export class JobsModel{
     static createOne(job: JobType){

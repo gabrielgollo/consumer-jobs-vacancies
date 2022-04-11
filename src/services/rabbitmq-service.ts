@@ -36,22 +36,22 @@ class RabbitMqService{
         });
     }
 
-    private async manageFails(callBackResponse: any, receivedMessage: string): Promise<void> {
-        const errorChannel = await this.createChannel(`${AMQP_INCOMING_QUEUE as string}-error`);
-        const errorQueueName = `${AMQP_INCOMING_QUEUE as string}-error`;
-        errorChannel.assertQueue(errorQueueName, { durable: true });
-        errorChannel.sendToQueue(errorQueueName, Buffer.from(JSON.stringify(callBackResponse)), { persistent: true });
-        errorChannel.close(()=>{
-            console.log('[RabbitMqService] -- Error channel closed');
+    public async sendToQueue(queueName: string, message: string, logger: boolean): Promise<void>{
+        if(!queueName || !message) throw new Error('Queue name or message is null');
+        const channel = await this.createChannel(queueName);
+        channel.assertQueue(queueName, { durable: true });
+        channel.sendToQueue(queueName, Buffer.from(message), { persistent: true });
+        channel.close(()=>{
+            if(logger) console.log(`[RabbitMqService] -- ${queueName} -- Channel closed`);
         });
+    }
 
-        const backupChannel = await this.createChannel(`${AMQP_INCOMING_QUEUE as string}-backup`);
+    private async manageFails(callBackResponse: any, receivedMessage: string): Promise<void> {
+        const errorQueueName = `${AMQP_INCOMING_QUEUE as string}-error`;
+        await this.sendToQueue(errorQueueName, JSON.stringify(callBackResponse), true);
+
         const backupQueueName = `${AMQP_INCOMING_QUEUE}-backup`;
-        backupChannel.assertQueue(backupQueueName, { durable: true });
-        backupChannel.sendToQueue(backupQueueName, Buffer.from(JSON.stringify(receivedMessage)), { persistent: true });
-        backupChannel.close(()=>{
-            console.log('[RabbitMqService] -- Backup channel closed');
-        });
+        await this.sendToQueue(backupQueueName, receivedMessage, false);
     }
 
     public async startConsuming(_callback: (msg: string) => Promise<any>){
