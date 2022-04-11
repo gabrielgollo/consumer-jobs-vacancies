@@ -5,7 +5,7 @@ import { JobType } from "../types/utils-types";
 
 const connection: mongoose.Connection = mongoDb.getOrCreateConnection();
 
-const Model = connection.model('job', JobSchema, 'jobsVacancies');
+const Model = connection.model('jobVacancie', JobSchema);
 
 export class JobsModel{
     static createOne(job: JobType){
@@ -13,6 +13,6 @@ export class JobsModel{
     }
 
     static getJobByIdAndCompany(idJob: string, company: string){
-        return  Model.findOne({ idJob: idJob, company: company })
+        return  Model.findOne({ idJob: idJob, company: company }).exec()
     }
 }

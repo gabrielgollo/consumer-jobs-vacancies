@@ -22,7 +22,7 @@ export class JobsService{
     static async saveJob(job: JobType): Promise<JobsServiceResponse>{
         try {
             const { idJob, title, company } = job;
-                const existJob = JobsModel.getJobByIdAndCompany(idJob, company);
+                const existJob = await JobsModel.getJobByIdAndCompany(idJob, company);
                 if(existJob){
                     return {
                         status: 'fail',
